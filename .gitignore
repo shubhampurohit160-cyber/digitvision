@@ -1,0 +1,20 @@
+# Virtual Environments
+venv/
+.env/
+__pycache__/
+*.pyc
+
+# IDEs
+.vscode/
+.idea/
+
+# Streamlit specific
+.streamlit/secrets.toml
+
+# Data & Models (Exclude large files, but track the folder structure via .gitkeep if needed)
+models/*.keras
+models/*.h5
+reports/*.png
+
+# OS generated files
+.DS_Store
