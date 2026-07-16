@@ -12,7 +12,7 @@ __pycache__/
 .streamlit/secrets.toml
 
 # Data & Models (Exclude large files, but track the folder structure via .gitkeep if needed)
-models/*.keras
+# models/*.keras
 models/*.h5
 reports/*.png
 
