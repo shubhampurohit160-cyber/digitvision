@@ -29,7 +29,7 @@
 
 | Home | Prediction | History |
 |:---:|:---:|:---:|
-| ![Home](images/home.png) | ![Prediction](images/predict.png) | ![History](images/history.png) |
+| ![Home](images/home.png) | ![Prediction](images/predict.png) | ![History](images/History.png) |
 
 ---
 
