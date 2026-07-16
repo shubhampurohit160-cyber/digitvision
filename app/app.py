@@ -61,10 +61,24 @@ st.markdown("""
 # --- MODEL LOADING ---
 @st.cache_resource
 def load_trained_model():
-    model_path = os.path.join("models", "digitvision_model.keras")
-    if not os.path.exists(model_path):
-        st.error("Model file not found. Please run src/train.py first.")
+    # List of possible paths to handle case-sensitivity and naming variants on Linux
+    possible_paths = [
+        os.path.join("models", "digitvision_model.keras"),
+        os.path.join("model", "digitvision_model.keras"),
+        os.path.join(os.path.dirname(__file__), "..", "models", "digitvision_model.keras"),
+        os.path.join(os.path.dirname(__file__), "..", "model", "digitvision_model.keras")
+    ]
+    
+    model_path = None
+    for path in possible_paths:
+        if os.path.exists(path):
+            model_path = path
+            break
+            
+    if not model_path:
+        st.error("🤖 AI Model file not found on the server. Looked in: " + str(possible_paths))
         return None
+        
     return tf.keras.models.load_model(model_path)
 
 model = load_trained_model()
