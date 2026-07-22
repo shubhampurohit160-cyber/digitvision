@@ -5,12 +5,14 @@ Provides a premium UI for drawing and predicting handwritten digits.
 
 import os
 import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.express as px
 from PIL import Image
 from streamlit_drawable_canvas import st_canvas
+from src.feedback import save_feedback  # Import the feedback saving function
 
 # Ensure the root directory is in the path for modular imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -156,9 +158,25 @@ with col2:
             "Probability": probs
         })
         fig = px.bar(chart_data, x="Digit", y="Probability", color="Probability",
-                     color_continuous_scale="Blues", height=300)
+                     color_continuous_scale="Blues", height=300,category_orders={"Digit": [str(i) for i in range(10)]})
+        fig.update_xaxes(type='category' , tickmode='linear')
         fig.update_layout(showlegend=False, margin=dict(l=20, r=20, t=10, b=10))
         st.plotly_chart(fig, use_container_width=True)
+
+    
+        st.write("---")
+        st.subheader("💡 Help the AI Learn")
+        st.caption("Is this prediction incorrect? Tell us what you actually drew to improve the model.")
+
+        with st.form("feedback_form", clear_on_submit=True):
+            corrected_digit = st.selectbox("What was the actual digit?", list(range(10)))
+            submitted = st.form_submit_button("Submit Correction")
+                    
+            if submitted:
+                        # Save the drawing and the correct label to a file or database
+                        # (We will implement the save_feedback function next)
+                save_feedback(canvas_result.image_data, corrected_digit)
+                st.success(f"Thank you! Saved as a real '{corrected_digit}'. The model will be retrained in the next batch.")
         
     else:
         st.info("Awaiting input. Please draw on the canvas and click Predict.")
