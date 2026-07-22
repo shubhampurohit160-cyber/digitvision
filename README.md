@@ -19,7 +19,7 @@
 
 > **Try the application right now — no installation required.**
 
-🔗 **Live App:** [digitvision-zyvla9kbj8n4mu7ktl7v2u.streamlit.app](https://digitvision-zyvla9kbj8n4mu7ktl7v2u.streamlit.app/)
+🔗 **Live App:** [digitvision-shu-bham.streamlit.app](https://digitvision-zyvla9kbj8n4mu7ktl7v2u.streamlit.app/)
 
 📦 **Repository:** [github.com/shubhampurohit160-cyber/digitvision](https://github.com/shubhampurohit160-cyber/digitvision)
 
@@ -53,6 +53,7 @@ The project was built to demonstrate a complete, production-style machine learni
 - 🕘 **Prediction History** — track and review previous predictions in-session
 - 📱 **Responsive Streamlit UI** — clean, accessible design across screen sizes
 - 🧩 **Modular Architecture** — separated concerns for model, preprocessing, and UI logic
+- 🧩 **Active Learning Feedback Loop:** Includes a user correction UI that saves edge-case misclassifications directly to the server for batch retraining.
 
 ---
 
@@ -100,13 +101,17 @@ The core of DigitVision AI is a **Convolutional Neural Network (CNN)** — the s
 
 ```
 digitvision/
-├── app.py                  # Streamlit application entry point
-├── model/
-│   ├── train.py             # Model training script
-│   ├── model.py              # CNN architecture definition
-│   └── digit_model.h5        # Trained model weights
-├── utils/
-│   ├── preprocessing.py      # Image preprocessing pipeline
+├── app
+|   └──app.py                  # Streamlit application entry point
+|
+├──models
+|   └──digitvision_model.keras # trained model
+|
+├── src/
+|   ├── train.py             # Model training scrip
+|   ├──feedback.py        # feedback from users about incorrect predictions
+|   ├──model.py           # CNN architecture definition
+│   ├──preprocessing.py      # Image preprocessing pipeline
 │   └── visualization.py      # Probability & confidence chart helpers
 ├── images/
 │   ├── home.png
@@ -116,10 +121,6 @@ digitvision/
 ├── LICENSE
 └── README.md
 ```
-
-> 📝 Adjust paths above to match the exact structure of your repository if it differs.
-
----
 
 ## 🛠️ Technology Stack
 
