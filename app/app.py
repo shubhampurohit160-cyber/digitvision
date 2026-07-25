@@ -186,9 +186,14 @@ with col2:
                 submitted = st.form_submit_button("Submit Correction")
         
                 if submitted:
-                    # Pass the image data from our session state directly to the save function
-                    save_feedback(mem['image_data'], correct_label)
-                    st.success(f"✅ Awesome! The drawing was saved to the '{correct_label}' folder for the next training batch.")
+            # Pass ALL the telemetry data into our new Supabase pipeline
+                    save_feedback(
+                        image_data=mem['image_data'], 
+                        actual_label=correct_label,
+                        predicted_label=mem['digit'],
+                        confidence=mem['conf']
+            )
+                    st.success(f"✅ Awesome! The correction was sent directly to the cloud feedback queue.")
         
         else:
             # This cleanly handles the empty state on first load

@@ -1,24 +1,31 @@
-import os
-import time
+import base64
 import numpy as np
-from src.preprocessing import preprocess_canvas_image
+import streamlit as st
+from supabase import create_client, Client
 
-def save_feedback(canvas_image: np.ndarray, correct_label: int) -> None:
-    """Saves misclassified user drawings to a feedback directory for batch retraining."""
-    # This automatically builds the path: data/feedback/0, data/feedback/1, etc.
-    feedback_dir = os.path.join("data", "feedback", str(correct_label))
+# 1. Initialize the Supabase connection using Streamlit's secure secrets
+@st.cache_resource
+def init_connection() -> Client:
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    return create_client(url, key)
+
+supabase = init_connection()
+
+def save_feedback(image_data: np.ndarray, actual_label: int, predicted_label: int, confidence: float) -> None:
+    """Encodes misclassified user drawings and uploads them to the Supabase feedback queue."""
     
-    # exist_ok=True means it will automatically create the folders if they don't exist!
-    os.makedirs(feedback_dir, exist_ok=True)
+    # 2. Serialize the NumPy array to bytes, then to a Base64 string
+    img_bytes = image_data.tobytes()
+    encoded_image = base64.b64encode(img_bytes).decode('utf-8')
     
-    # Preprocess the canvas image exactly how the model expects it
-    tensor = preprocess_canvas_image(canvas_image)
+    # 3. Build the row exactly as we defined it in your SQL schema
+    db_row = {
+        "actual_label": actual_label,
+        "predicted_label": predicted_label,
+        "confidence": float(confidence), # Ensure it's a standard float, not a numpy float
+        "image_data": encoded_image
+    }
     
-    # Remove the batch dimension to save it as a simple 28x28 numpy array
-    image_array = tensor.squeeze() 
-    
-    # Save using a unique timestamp to prevent overwriting
-    filename = f"user_{int(time.time())}.npy"
-    filepath = os.path.join(feedback_dir, filename)
-    
-    np.save(filepath, image_array)
+    # 4. Insert the row into the cloud database
+    supabase.table("model_feedback").insert(db_row).execute()
