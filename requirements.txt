@@ -17,3 +17,6 @@ plotly>=5.18.0
 
 # Testing & Development
 pytest>=7.4.0
+
+#database
+supabase>=1.0.0
