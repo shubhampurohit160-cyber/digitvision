@@ -129,57 +129,70 @@ with col1:
             st.rerun()
 
 with col2:
-    st.subheader("Analysis & Results")
-    
-    if predict_btn and canvas_result.image_data is not None:
-        # 1. Preprocess
-        with st.spinner("Processing image..."):
-            tensor = preprocess_canvas_image(canvas_result.image_data)
-            
-            # 2. Inference
-            digit, conf, top_3, probs = predict_digit(model, tensor)
-            
-            # 3. Update History
-            st.session_state.history.append({"digit": digit, "conf": conf})
-
-        # --- Prediction Card ---
-        st.markdown(f"""
-            <div class="prediction-card">
-                <p style='margin:0; font-size:14px; color:#aaa;'>PRIMARY PREDICTION</p>
-                <div class="digit-display">{digit}</div>
-                <p style='text-align:center; margin:0; font-size:18px;'>Confidence: <b>{conf:.2%}</b></p>
-            </div>
-            """, unsafe_allow_html=True)
-
-        # --- Probabilities Chart ---
-        st.write("Confidence Distribution")
-        chart_data = pd.DataFrame({
-            "Digit": [str(i) for i in range(10)],
-            "Probability": probs
-        })
-        fig = px.bar(chart_data, x="Digit", y="Probability", color="Probability",
-                     color_continuous_scale="Blues", height=300,category_orders={"Digit": [str(i) for i in range(10)]})
-        fig.update_xaxes(type='category' , tickmode='linear')
-        fig.update_layout(showlegend=False, margin=dict(l=20, r=20, t=10, b=10))
-        st.plotly_chart(fig, use_container_width=True)
-
-    
-        st.write("---")
-        st.subheader("💡 Help the AI Learn")
-        st.caption("Is this prediction incorrect? Tell us what you actually drew to improve the model.")
-
-        with st.form("feedback_form", clear_on_submit=True):
-            corrected_digit = st.selectbox("What was the actual digit?", list(range(10)))
-            submitted = st.form_submit_button("Submit Correction")
-                    
-            if submitted:
-                        # Save the drawing and the correct label to a file or database
-                        # (We will implement the save_feedback function next)
-                save_feedback(canvas_result.image_data, corrected_digit)
-                st.success(f"Thank you! Saved as a real '{corrected_digit}'. The model will be retrained in the next batch.")
+        st.subheader("Analysis & Results")
         
-    else:
-        st.info("Awaiting input. Please draw on the canvas and click Predict.")
+        # --- NEW: Initialize a memory state for the prediction ---
+        if "current_prediction" not in st.session_state:
+            st.session_state.current_prediction = None
+
+        # 1. ONLY run the ML model when the Predict button is clicked
+        if predict_btn and canvas_result.image_data is not None:
+            with st.spinner("Processing image..."):
+                tensor = preprocess_canvas_image(canvas_result.image_data)
+                digit, conf, top_3, probs = predict_digit(model, tensor)
+                
+                # Save the results into memory so they survive page refreshes!
+                st.session_state.current_prediction = {
+                    "digit": digit,
+                    "conf": conf,
+                    "probs": probs,
+                    "image_data": canvas_result.image_data
+                }
+                st.session_state.history.append({"digit": digit, "conf": conf})
+
+        # 2. Display the UI ONLY if we have a prediction saved in memory
+        if st.session_state.current_prediction is not None:
+            # Load the data out of memory
+            mem = st.session_state.current_prediction
+            
+            # --- Prediction Card ---
+            st.markdown(f"""
+                <div class="prediction-card">
+                    <p style='margin:0; font-size:14px; color:#aaa;'>PRIMARY PREDICTION</p>
+                    <div class="digit-display">{mem['digit']}</div>
+                    <p style='text-align:center; margin:0; font-size:18px;'>Confidence: <b>{mem['conf']:.2%}</b></p>
+                </div>
+                """, unsafe_allow_html=True)
+
+            # --- Probabilities Chart ---
+            st.write("Confidence Distribution")
+            chart_data = pd.DataFrame({
+                "Digit": [str(i) for i in range(10)],
+                "Probability": mem['probs']
+            })
+            fig = px.bar(chart_data, x="Digit", y="Probability", color="Probability",
+                         color_continuous_scale="Blues", height=300, category_orders={"Digit": [str(i) for i in range(10)]})
+            fig.update_xaxes(type='category', tickmode='linear')
+            fig.update_layout(showlegend=False, margin=dict(l=20, r=20, t=10, b=10))
+            st.plotly_chart(fig, use_container_width=True)
+
+            # --- Feedback Form ---
+            st.write("---")
+            st.subheader("💡 Help the AI Learn")
+            st.caption("Is this prediction incorrect? Tell us what you actually drew to improve the model.")
+
+            with st.form("feedback_form", clear_on_submit=True):
+                correct_label = st.selectbox("What is the actual digit?", options=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+                submitted = st.form_submit_button("Submit Correction")
+        
+                if submitted:
+                    # Pass the image data from our session state directly to the save function
+                    save_feedback(mem['image_data'], correct_label)
+                    st.success(f"✅ Awesome! The drawing was saved to the '{correct_label}' folder for the next training batch.")
+        
+        else:
+            # This cleanly handles the empty state on first load
+            st.info("Awaiting input. Please draw on the canvas and click Predict.")
 
 st.divider()
 st.caption("Engineered by DigitVision AI Team | Production-Grade Portfolio Project")
