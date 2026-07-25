@@ -141,6 +141,5 @@ def main():
     save_training_history(history.history)
     print("Training pipeline execution completed successfully.")
 
-
 if __name__ == "__main__":
     main()
