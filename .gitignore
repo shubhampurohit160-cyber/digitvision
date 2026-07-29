@@ -19,3 +19,7 @@ reports/*.png
 # OS generated files
 .DS_Store
 
+# Temporary files
+data\
+retrain_dataset.npz
+
